@@ -34,18 +34,20 @@ function generate(){
 	
 	var body=marked(document.querySelector('.markdown').value,{renderer:renderer});
 	document.querySelector('#main').value=[
-		'<document xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><body>',
+		'<body>',
 		'<p><r><fldChar w:fldCharType="begin"/></r><r><instrText xml:space="preserve"> TOC \\o "1-'+TOC.length+'" \\h \\z \\u </instrText></r><r><fldChar w:fldCharType="separate"/></r></p>',
 			TOC.join(''),
 		'<p><r><fldChar w:fldCharType="end"/></r></p>',
-		body,
-		'</body></document>'].join('\n');
+		body,'</body>'].join('\n');
 }
 function pack(){
 	var docx = new JSZip();
 	Array.prototype.forEach.call(document.querySelectorAll('.file'),function(f) {
 		var content = f.value.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
-		docx.file(f.dataset['name'],'<'+'?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n\n'+content)
+		var xmlns="http://schemas.openxmlformats.org/"+{p:'package',w:'wordprocessingml'}[f.dataset['xmlns'][0]]+"/2006/"+f.dataset['xmlns'].substr(1);
+		docx.file(f.dataset['name'],
+			'<'+'?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
+			'<'+f.dataset['node']+' xmlns="'+xmlns+'" xmlns:w="'+xmlns+'">\n'+content+'\n</'+f.dataset['node']+'>')
 	})
 	blob=docx.generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'})
 	saveAs(blob, 'hello.docx')
@@ -53,82 +55,66 @@ function pack(){
 </script>
 </head>
 <body>
-<textarea class="file" data-name="[Content_Types].xml">
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-	<Default Extension="xml"   ContentType="application/xml"/>
-	<Default Extension="rels"  ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-	<Default Extension="doc"   ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-	<Default Extension="style" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
-	<Default Extension="num"   ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>
-</Types>
+<textarea class="file" data-name="[Content_Types].xml" data-node="Types" data-xmlns="pcontent-types">
+<Default Extension="xml"   ContentType="application/xml"/>
+<Default Extension="rels"  ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="doc"   ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+<Default Extension="style" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+<Default Extension="num"   ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>
 </textarea>
-
-<textarea class="file" data-name="_rels/.rels">
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-	<Relationship Target="main.doc" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Id="rId654"/>
-</Relationships>
+<textarea class="file" data-name="_rels/.rels" data-node="Relationships" data-xmlns="prelationships">
+<Relationship Target="main.doc" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Id="rId654"/>
 </textarea>
-
-<textarea class="file" data-name="_rels/main.doc.rels">
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-	<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="main.style"/>
-	<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="main.num"/>
-</Relationships>
+<textarea class="file" data-name="_rels/main.doc.rels" data-node="Relationships" data-xmlns="prelationships">
+<Relationship Target="main.style" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Id="rId1"/>
+<Relationship Target="main.num"   Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Id="rId2"/>
 </textarea>
-<!--
-<multiLevelType w:val="multilevel"/>
-<multiLevelType w:val="hybridMultilevel"/>
--->
-<textarea class="file" data-name="main.num">
-<numbering xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-	<abstractNum w:abstractNumId="0"><multiLevelType w:val="multilevel"/>
-		<lvl w:ilvl="0"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1."/></lvl>
-		<lvl w:ilvl="1"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1.%2."/></lvl>
-		<lvl w:ilvl="2"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1.%2.%3."/></lvl>
-		<lvl w:ilvl="3"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1.%2.%3.%4."/></lvl>
-	</abstractNum>
-	<abstractNum w:abstractNumId="1"><w:multiLevelType w:val="multilevel"/>
-		<lvl w:ilvl="0"><numFmt w:val="decimal"/><pPr><ind w:left="200" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1."/></lvl>
-		<lvl w:ilvl="1"><numFmt w:val="decimal"/><pPr><ind w:left="400" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%2."/></lvl>
-		<lvl w:ilvl="2"><numFmt w:val="decimal"/><pPr><ind w:left="600" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%3."/></lvl>
-		<lvl w:ilvl="3"><numFmt w:val="decimal"/><pPr><ind w:left="800" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%4."/></lvl>
-	</abstractNum>
-	<abstractNum w:abstractNumId="2"><multiLevelType w:val="hybridMultilevel"/>
-		<lvl w:ilvl="0"><numFmt w:val="bullet" /><pPr><ind w:left="200" w:hanging="360"/></pPr><lvlText w:val="*"/></lvl>
-		<lvl w:ilvl="1"><numFmt w:val="bullet" /><pPr><ind w:left="400" w:hanging="360"/></pPr><lvlText w:val="o"/></lvl>
-		<lvl w:ilvl="2"><numFmt w:val="bullet" /><pPr><ind w:left="600" w:hanging="360"/></pPr><lvlText w:val="-"/></lvl>
-		<lvl w:ilvl="3"><numFmt w:val="bullet" /><pPr><ind w:left="800" w:hanging="360"/></pPr><lvlText w:val="+"/></lvl>
-	</abstractNum>
-	<num w:numId="1"><abstractNumId w:val="0"/></num>
-	<num w:numId="2"><abstractNumId w:val="1"/></num>
-	<num w:numId="3"><abstractNumId w:val="2"/></num>
-</numbering>
+<textarea class="file" data-name="main.num" data-node="numbering" data-xmlns="wmain">
+<!-- <multiLevelType w:val="hybridMultilevel/multilevel"/>-->
+<abstractNum w:abstractNumId="0"><multiLevelType w:val="multilevel"/>
+	<lvl w:ilvl="0"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1."/></lvl>
+	<lvl w:ilvl="1"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1.%2."/></lvl>
+	<lvl w:ilvl="2"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1.%2.%3."/></lvl>
+	<lvl w:ilvl="3"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1.%2.%3.%4."/></lvl>
+</abstractNum>
+<abstractNum w:abstractNumId="1"><w:multiLevelType w:val="multilevel"/>
+	<lvl w:ilvl="0"><numFmt w:val="decimal"/><pPr><ind w:left="200" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1."/></lvl>
+	<lvl w:ilvl="1"><numFmt w:val="decimal"/><pPr><ind w:left="400" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%2."/></lvl>
+	<lvl w:ilvl="2"><numFmt w:val="decimal"/><pPr><ind w:left="600" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%3."/></lvl>
+	<lvl w:ilvl="3"><numFmt w:val="decimal"/><pPr><ind w:left="800" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%4."/></lvl>
+</abstractNum>
+<abstractNum w:abstractNumId="2"><multiLevelType w:val="hybridMultilevel"/>
+	<lvl w:ilvl="0"><numFmt w:val="bullet" /><pPr><ind w:left="200" w:hanging="360"/></pPr><lvlText w:val="*"/></lvl>
+	<lvl w:ilvl="1"><numFmt w:val="bullet" /><pPr><ind w:left="400" w:hanging="360"/></pPr><lvlText w:val="o"/></lvl>
+	<lvl w:ilvl="2"><numFmt w:val="bullet" /><pPr><ind w:left="600" w:hanging="360"/></pPr><lvlText w:val="-"/></lvl>
+	<lvl w:ilvl="3"><numFmt w:val="bullet" /><pPr><ind w:left="800" w:hanging="360"/></pPr><lvlText w:val="+"/></lvl>
+</abstractNum>
+<num w:numId="1"><abstractNumId w:val="0"/></num>
+<num w:numId="2"><abstractNumId w:val="1"/></num>
+<num w:numId="3"><abstractNumId w:val="2"/></num>
 </textarea>
+<textarea class="file" data-name="main.style" data-node="styles" data-xmlns="wmain">
 <!--<qFormat w:val="1"/> for ribon access-->
-<textarea class="file" data-name="main.style">
-<styles xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-	<style w:type="paragraph" w:styleId="heading 1" ><name w:val="heading 1" /><pPr><spacing w:before="480" w:after="0"/></pPr><rPr><sz w:val="28"/><szCs w:val="28"/><b/><bCs/><caps/></rPr></style>
-	<style w:type="paragraph" w:styleId="heading 2" ><name w:val="heading 2" /><pPr><spacing w:before="240" w:after="0"/></pPr><rPr><sz w:val="26"/><szCs w:val="26"/><b/><bCs/></rPr></style>
-	<style w:type="paragraph" w:styleId="heading 3" ><name w:val="heading 3" /><pPr><spacing w:before="120" w:after="0"/></pPr><rPr><sz w:val="24"/><szCs w:val="26"/></rPr></style>
-	<style w:type="paragraph" w:styleId="heading 4" ><name w:val="heading 4" /><pPr><spacing w:before="60"  w:after="0"/></pPr><rPr><sz w:val="22"/><szCs w:val="24"/></rPr></style>
-	<style w:type="paragraph" w:styleId="heading 5" ><name w:val="heading 5" /><pPr><spacing w:before="30"  w:after="0"/></pPr><rPr><sz w:val="20"/><szCs w:val="22"/></rPr></style>
-	<style w:type="paragraph" w:styleId="heading 6" ><name w:val="heading 6" /></style>
-	<style w:type="paragraph" w:styleId="heading 7" ><name w:val="heading 7" /></style>
-	<style w:type="paragraph" w:styleId="heading 8" ><name w:val="heading 8" /></style>
-	<style w:type="paragraph" w:styleId="heading 9" ><name w:val="heading 9" /></style>
-	<style w:type="paragraph" w:styleId="Quote"     ><name w:val="Quote"     /><pPr><pBdr><left w:val="single" w:sz="48" w:space="4" w:color="A6A6A6"/></pBdr></pPr></style>
-	<style w:type="paragraph" w:styleId="Normal"    ><name w:val="Normal"    /><rPr></rPr></style>
-	<style w:type="paragraph" w:styleId="Code"      ><name w:val="Code"      /><rPr><rFonts w:ascii="Consolas"/><shd w:fill="D9D9D9"/></rPr></style>
-	<style w:type="paragraph" w:styleId="Html"      ><name w:val="Html"      /><rPr><rFonts w:ascii="Consolas"/><shd w:fill="D9D9D9"/></rPr></style>
-	<style w:type="paragraph" w:styleId="List Paragraph"><name w:val="List Paragraph"/><qFormat/><pPr><ind w:left="720"/><contextualSpacing/></pPr></style>
-	<style w:type="character" w:styleId="Strong"    ><name w:val="Strong"    /><rPr><b/><bCs/></rPr></style>
-	<style w:type="character" w:styleId="Emphasis"  ><name w:val="Emphasis"  /><rPr><i/><iCs/></rPr></style>
-	<style w:type="character" w:styleId="Plain Text"><name w:val="Plain Text"/><rPr><rFonts w:ascii="Consolas"/><shd w:fill="D9D9D9"/></rPr></style>
-	<style w:type="character" w:styleId="Del"       ><name w:val="Del"       /><rPr><strike/></rPr></style>
-</styles>
+<style w:type="paragraph" w:styleId="heading 1" ><name w:val="heading 1" /><pPr><spacing w:before="480" w:after="0"/></pPr><rPr><sz w:val="28"/><szCs w:val="28"/><b/><bCs/><caps/></rPr></style>
+<style w:type="paragraph" w:styleId="heading 2" ><name w:val="heading 2" /><pPr><spacing w:before="240" w:after="0"/></pPr><rPr><sz w:val="26"/><szCs w:val="26"/><b/><bCs/></rPr></style>
+<style w:type="paragraph" w:styleId="heading 3" ><name w:val="heading 3" /><pPr><spacing w:before="120" w:after="0"/></pPr><rPr><sz w:val="24"/><szCs w:val="26"/></rPr></style>
+<style w:type="paragraph" w:styleId="heading 4" ><name w:val="heading 4" /><pPr><spacing w:before="60"  w:after="0"/></pPr><rPr><sz w:val="22"/><szCs w:val="24"/></rPr></style>
+<style w:type="paragraph" w:styleId="heading 5" ><name w:val="heading 5" /><pPr><spacing w:before="30"  w:after="0"/></pPr><rPr><sz w:val="20"/><szCs w:val="22"/></rPr></style>
+<style w:type="paragraph" w:styleId="heading 6" ><name w:val="heading 6" /></style>
+<style w:type="paragraph" w:styleId="heading 7" ><name w:val="heading 7" /></style>
+<style w:type="paragraph" w:styleId="heading 8" ><name w:val="heading 8" /></style>
+<style w:type="paragraph" w:styleId="heading 9" ><name w:val="heading 9" /></style>
+<style w:type="paragraph" w:styleId="Quote"     ><name w:val="Quote"     /><pPr><pBdr><left w:val="single" w:sz="48" w:space="4" w:color="A6A6A6"/></pBdr></pPr></style>
+<style w:type="paragraph" w:styleId="Normal"    ><name w:val="Normal"    /><rPr></rPr></style>
+<style w:type="paragraph" w:styleId="Code"      ><name w:val="Code"      /><rPr><rFonts w:ascii="Consolas"/><shd w:fill="D9D9D9"/></rPr></style>
+<style w:type="paragraph" w:styleId="Html"      ><name w:val="Html"      /><rPr><rFonts w:ascii="Consolas"/><shd w:fill="D9D9D9"/></rPr></style>
+<style w:type="paragraph" w:styleId="List Paragraph"><name w:val="List Paragraph"/><qFormat/><pPr><ind w:left="720"/><contextualSpacing/></pPr></style>
+<style w:type="character" w:styleId="Strong"    ><name w:val="Strong"    /><rPr><b/><bCs/></rPr></style>
+<style w:type="character" w:styleId="Emphasis"  ><name w:val="Emphasis"  /><rPr><i/><iCs/></rPr></style>
+<style w:type="character" w:styleId="Plain Text"><name w:val="Plain Text"/><rPr><rFonts w:ascii="Consolas"/><shd w:fill="D9D9D9"/></rPr></style>
+<style w:type="character" w:styleId="Del"       ><name w:val="Del"       /><rPr><strike/></rPr></style>
 </textarea>
-
-<textarea class="file" data-name="main.doc" id="main"></textarea>
+<textarea class="file" data-name="main.doc" data-node="document" data-xmlns="wmain" id="main"></textarea>
 
 <textarea class="markdown">
 # Markdown to Docx converter
