@@ -1,14 +1,15 @@
+<!doctype HTML>
 <html>
 <head>
 <meta charset="utf-8"/>
 <style>
-textarea{top: 0px;left: 0px;width: 100%;height: 100%;position: fixed;resize: none;margin: 0;border: 0;}
+textarea{top:0px;left:0px;width:100%;height:100%;position:fixed;resize:none;margin:0;border:0;}
 button{position:fixed;bottom:.5em;right:.5em;background:#F48;color:#FFF;border:none;font-size:2em;width:2em;height:2em;border-radius:2em;cursor: pointer;box-shadow: .02em .02em .15em #000;}
 .file{display:none;}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
-<script src="https://raw.githubusercontent.com/eligrey/FileSaver.js/master/FileSaver.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.js"></script>
 <script>
 function generate(){
 	var TOC=[],TOCid=0;
@@ -51,7 +52,7 @@ function pack(){
 }
 </script>
 </head>
-
+<body>
 <textarea class="file" data-name="[Content_Types].xml">
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 	<Default Extension="xml"   ContentType="application/xml"/>
@@ -129,7 +130,7 @@ function pack(){
 
 <textarea class="file" data-name="main.doc" id="main"></textarea>
 
-<textarea style="top:0;left:0;bottom:0;right:0;position:absolute;resize:none;" class="markdown">
+<textarea class="markdown">
 # Markdown to Docx converter
 
 This tool allow you to convert your markdown file to a docx file.
@@ -193,7 +194,7 @@ using the triple backtitck
   * another list
 * that's all
 
-1. Numbered list should juste start
+1. Numbered list should just start
 3. with a number
 3. Not even continuous
   1. and it should support
@@ -211,6 +212,5 @@ a page break, using the horizontal line
 THE END
 
 </textarea>
-<body>
 <button title="Save as docx" onclick="generate();pack()">&#8595;</button>
 </body>
