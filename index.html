@@ -1,0 +1,216 @@
+<html>
+<head>
+<meta charset="utf-8"/>
+<style>
+textarea{top: 0px;left: 0px;width: 100%;height: 100%;position: fixed;resize: none;margin: 0;border: 0;}
+button{position:fixed;bottom:.5em;right:.5em;background:#F48;color:#FFF;border:none;font-size:2em;width:2em;height:2em;border-radius:2em;cursor: pointer;box-shadow: .02em .02em .15em #000;}
+.file{display:none;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
+<script src="https://raw.githubusercontent.com/eligrey/FileSaver.js/master/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
+<script>
+function generate(){
+	var TOC=[],TOCid=0;
+	function par(p){return function(text,n,bm){return '<p><pPr><pStyle w:val="'+p+(n||'')+'"/></pPr>'+(bm?'<bookmarkStart w:name="'+bm+'"/>':'')+'<r><t>'+text+'</t></r></p>'}}
+	function txt(p){return function(text,l,bm){return '</t></r><r><rPr><rStyle w:val="'+p+'"/></rPr><t>'+text+'</t></r><r><t xml:space="preserve">'}}
+	function toc(text,id){return '<p><pPr><tabs><tab w:val="right" w:leader="dot" w:pos="9396"/></tabs></pPr><hyperlink w:anchor="'+id+'"><r><t>'+text+'</t></r><r><tab/></r><r><t>?</t></r></hyperlink></p>'}
+	
+	var renderer = new marked.Renderer();
+	renderer.heading   = function(text,n){TOC.push(toc(text,'TOC_'+(++TOCid)));return par('heading ')(text,n,'TOC_'+TOCid)}
+	renderer.paragraph = par('Par');
+	renderer.list      = function(body,ordered){return body.replace(/<ilvl w:val="(-?\d+)"\/>/g,function(all,i){return '<ilvl w:val="'+(+i+1)+'"\/>'}).replace(/<numId w:val="0"\/>/g,'<numId w:val="'+(ordered?2:3)+'"/>')};
+	renderer.listitem  = function(text){var pos=text.indexOf("<");return '<p><pPr><pStyle w:val="List Paragraph"/><numPr><ilvl w:val="-1"/><numId w:val="0"/></numPr></pPr><r><t>'+(~pos?text.substr(0,pos):text)+'</t></r></p>\n'+(~pos?text.substr(pos):'')};
+	renderer.code      = par('Code');
+	renderer.html      = par('Html');
+	renderer.blockquote= function(pars){return pars.replace(/<pStyle w:val="Par"\/>/g,'<pStyle w:val="Quote"/>')};//convert the current paragraph into a Quote paragraph
+	renderer.em        = txt('Emphasis');
+	renderer.strong    = txt('Strong');
+	renderer.codespan  = txt('Plain Text');
+	renderer.del       = txt('Del');
+	renderer.br        = function(){return '<br/>'}
+	renderer.hr        = function(){return '<br w:type="page"/>'}
+	
+	var body=marked(document.querySelector('.markdown').value,{renderer:renderer});
+	document.querySelector('#main').value=[
+		'<document xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><body>',
+		'<p><r><fldChar w:fldCharType="begin"/></r><r><instrText xml:space="preserve"> TOC \\o "1-'+TOC.length+'" \\h \\z \\u </instrText></r><r><fldChar w:fldCharType="separate"/></r></p>',
+			TOC.join(''),
+		'<p><r><fldChar w:fldCharType="end"/></r></p>',
+		body,
+		'</body></document>'].join('\n');
+}
+function pack(){
+	var docx = new JSZip();
+	Array.prototype.forEach.call(document.querySelectorAll('.file'),function(f) {
+		var content = f.value.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+		docx.file(f.dataset['name'],'<'+'?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n\n'+content)
+	})
+	blob=docx.generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'})
+	saveAs(blob, 'hello.docx')
+}
+</script>
+</head>
+
+<textarea class="file" data-name="[Content_Types].xml">
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+	<Default Extension="xml"   ContentType="application/xml"/>
+	<Default Extension="rels"  ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+	<Default Extension="doc"   ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+	<Default Extension="style" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+	<Default Extension="num"   ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>
+</Types>
+</textarea>
+
+<textarea class="file" data-name="_rels/.rels">
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+	<Relationship Target="main.doc" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Id="rId654"/>
+</Relationships>
+</textarea>
+
+<textarea class="file" data-name="_rels/main.doc.rels">
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+	<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="main.style"/>
+	<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="main.num"/>
+</Relationships>
+</textarea>
+<!--
+<multiLevelType w:val="multilevel"/>
+<multiLevelType w:val="hybridMultilevel"/>
+-->
+<textarea class="file" data-name="main.num">
+<numbering xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+	<abstractNum w:abstractNumId="0"><multiLevelType w:val="multilevel"/>
+		<lvl w:ilvl="0"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1."/></lvl>
+		<lvl w:ilvl="1"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1.%2."/></lvl>
+		<lvl w:ilvl="2"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1.%2.%3."/></lvl>
+		<lvl w:ilvl="3"><numFmt w:val="decimal"/><pPr><ind w:left="0"   w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1.%2.%3.%4."/></lvl>
+	</abstractNum>
+	<abstractNum w:abstractNumId="1"><w:multiLevelType w:val="multilevel"/>
+		<lvl w:ilvl="0"><numFmt w:val="decimal"/><pPr><ind w:left="200" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%1."/></lvl>
+		<lvl w:ilvl="1"><numFmt w:val="decimal"/><pPr><ind w:left="400" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%2."/></lvl>
+		<lvl w:ilvl="2"><numFmt w:val="decimal"/><pPr><ind w:left="600" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%3."/></lvl>
+		<lvl w:ilvl="3"><numFmt w:val="decimal"/><pPr><ind w:left="800" w:hanging="360"/></pPr><start w:val="1"/><lvlText w:val="%4."/></lvl>
+	</abstractNum>
+	<abstractNum w:abstractNumId="2"><multiLevelType w:val="hybridMultilevel"/>
+		<lvl w:ilvl="0"><numFmt w:val="bullet" /><pPr><ind w:left="200" w:hanging="360"/></pPr><lvlText w:val="*"/></lvl>
+		<lvl w:ilvl="1"><numFmt w:val="bullet" /><pPr><ind w:left="400" w:hanging="360"/></pPr><lvlText w:val="o"/></lvl>
+		<lvl w:ilvl="2"><numFmt w:val="bullet" /><pPr><ind w:left="600" w:hanging="360"/></pPr><lvlText w:val="-"/></lvl>
+		<lvl w:ilvl="3"><numFmt w:val="bullet" /><pPr><ind w:left="800" w:hanging="360"/></pPr><lvlText w:val="+"/></lvl>
+	</abstractNum>
+	<num w:numId="1"><abstractNumId w:val="0"/></num>
+	<num w:numId="2"><abstractNumId w:val="1"/></num>
+	<num w:numId="3"><abstractNumId w:val="2"/></num>
+</numbering>
+</textarea>
+<!--<qFormat w:val="1"/> for ribon access-->
+<textarea class="file" data-name="main.style">
+<styles xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+	<style w:type="paragraph" w:styleId="heading 1" ><name w:val="heading 1" /><pPr><spacing w:before="480" w:after="0"/></pPr><rPr><sz w:val="28"/><szCs w:val="28"/><b/><bCs/><caps/></rPr></style>
+	<style w:type="paragraph" w:styleId="heading 2" ><name w:val="heading 2" /><pPr><spacing w:before="240" w:after="0"/></pPr><rPr><sz w:val="26"/><szCs w:val="26"/><b/><bCs/></rPr></style>
+	<style w:type="paragraph" w:styleId="heading 3" ><name w:val="heading 3" /><pPr><spacing w:before="120" w:after="0"/></pPr><rPr><sz w:val="24"/><szCs w:val="26"/></rPr></style>
+	<style w:type="paragraph" w:styleId="heading 4" ><name w:val="heading 4" /><pPr><spacing w:before="60"  w:after="0"/></pPr><rPr><sz w:val="22"/><szCs w:val="24"/></rPr></style>
+	<style w:type="paragraph" w:styleId="heading 5" ><name w:val="heading 5" /><pPr><spacing w:before="30"  w:after="0"/></pPr><rPr><sz w:val="20"/><szCs w:val="22"/></rPr></style>
+	<style w:type="paragraph" w:styleId="heading 6" ><name w:val="heading 6" /></style>
+	<style w:type="paragraph" w:styleId="heading 7" ><name w:val="heading 7" /></style>
+	<style w:type="paragraph" w:styleId="heading 8" ><name w:val="heading 8" /></style>
+	<style w:type="paragraph" w:styleId="heading 9" ><name w:val="heading 9" /></style>
+	<style w:type="paragraph" w:styleId="Quote"     ><name w:val="Quote"     /><pPr><pBdr><left w:val="single" w:sz="48" w:space="4" w:color="A6A6A6"/></pBdr></pPr></style>
+	<style w:type="paragraph" w:styleId="Normal"    ><name w:val="Normal"    /><rPr></rPr></style>
+	<style w:type="paragraph" w:styleId="Code"      ><name w:val="Code"      /><rPr><rFonts w:ascii="Consolas"/><shd w:fill="D9D9D9"/></rPr></style>
+	<style w:type="paragraph" w:styleId="Html"      ><name w:val="Html"      /><rPr><rFonts w:ascii="Consolas"/><shd w:fill="D9D9D9"/></rPr></style>
+	<style w:type="paragraph" w:styleId="List Paragraph"><name w:val="List Paragraph"/><qFormat/><pPr><ind w:left="720"/><contextualSpacing/></pPr></style>
+	<style w:type="character" w:styleId="Strong"    ><name w:val="Strong"    /><rPr><b/><bCs/></rPr></style>
+	<style w:type="character" w:styleId="Emphasis"  ><name w:val="Emphasis"  /><rPr><i/><iCs/></rPr></style>
+	<style w:type="character" w:styleId="Plain Text"><name w:val="Plain Text"/><rPr><rFonts w:ascii="Consolas"/><shd w:fill="D9D9D9"/></rPr></style>
+	<style w:type="character" w:styleId="Del"       ><name w:val="Del"       /><rPr><strike/></rPr></style>
+</styles>
+</textarea>
+
+<textarea class="file" data-name="main.doc" id="main"></textarea>
+
+<textarea style="top:0;left:0;bottom:0;right:0;position:absolute;resize:none;" class="markdown">
+# Markdown to Docx converter
+
+This tool allow you to convert your markdown file to a docx file.
+
+## Implemented
+
+* Heading
+* Basic list
+* Numbered list
+* Inner list
+* Code paragraph
+* HTML code
+* Quoted text
+* Emphasis text
+* Strong text
+* Code span
+* Deleted text
+* Line break
+* Page break
+* Header
+* Table of Content
+
+## Not yet implemented
+
+* Table support
+* Media support (image/graphic/equation/...)
+* Link support
+* Reference
+* Table of Reference
+
+## Not implementable
+
+* Chapter page number
+
+# Example
+
+This is a paragraph
+on the same line
+
+This is a new paragraph  
+with a break line  
+using 2 space at the end of the line
+
+This is an *emphasis text* and a **strong** one (and maybe ~~deleted~~)
+
+Code can be `inline` or
+
+    a line startig with 4 spaces
+
+or
+
+	a line starting with a tabulation
+
+or
+```
+using the triple backtitck
+```
+
+* Basic list
+  * containing
+  * another list
+* that's all
+
+1. Numbered list should juste start
+3. with a number
+3. Not even continuous
+  1. and it should support
+  2. inner numbered list
+4. that's all
+
+> This is a blockquote
+> 
+> with two paragraphs
+
+a page break, using the horizontal line
+
+-----
+
+THE END
+
+</textarea>
+<body>
+<button title="Save as docx" onclick="generate();pack()">&#8595;</button>
+</body>
